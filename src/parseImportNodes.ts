@@ -7,7 +7,7 @@ const ws = `[\\s\\n\\r]`;
 const namespaceToken = `\\*\\s+as\\s+(${name})`;
 const defaultImportToken = name;
 const destructingImportToken = `(${name})(\\s+as\\s+(${name}))?`;
-const destructingImport = `{(${ws}*${destructingImportToken}(,${ws}*${destructingImportToken})*${ws}*)}`;
+const destructingImport = `{(${ws}*${destructingImportToken}${ws}*(,${ws}*${destructingImportToken})*${ws}*,?${ws}*)}`;
 const defaultAndDestructingImport = `${defaultImportToken}${ws}*,${ws}*${destructingImport}`;
 const combinedImportTypes = `(${namespaceToken}|${defaultImportToken}|${destructingImport}|${defaultAndDestructingImport})`;
 const importRegexString = `^import\\s+(${combinedImportTypes}\\s+from\\s+)?['"]([@\\w\\\\/\.-]+)['"];?\\r?\\n?`;
@@ -53,9 +53,10 @@ function parseDestructiveImports(destructiveImports: string): DestructedImport[]
         .split(',')
         .map(destructiveImport => {
             let match = destructingImportTokenRegex.exec(destructiveImport);
-            return {
+            return !match ? null : {
                 importName: match[1],
                 alias: match[4],
             };
-        });
+        })
+        .filter(destructedImport => !!destructedImport && !!destructedImport.importName);
 }
